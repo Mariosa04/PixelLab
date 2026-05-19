@@ -12,7 +12,7 @@ namespace PixelLab.Core
 {
     public static class ColorSpaceConverter
     {
-        public static Bitmap ProcessImage(Bitmap source, string colorSpace, bool enableC1, bool enableC2, bool enableC3, float mC1, float mC2, float mC3)
+        public static Bitmap ProcessImage(Bitmap source, string colorSpace, bool enableC1, bool enableC2, bool enableC3, bool enableC4, float mC1, float mC2, float mC3, float mC4)
         {
             if (colorSpace == "HSV")
             {
@@ -131,14 +131,90 @@ namespace PixelLab.Core
 
                 return resultMat.ToImage<Bgr, byte>().ToBitmap();
             }
+            else if (colorSpace == "Lab")
+            {
+                // Convert Bitmap to EmguCV BGR Image then to Mat format
+                Image<Bgr, byte> bgrImg = source.ToImage<Bgr, byte>();
+                Mat rgbImage = bgrImg.Mat;
 
-            // Fallback for RGB manually processing
+                // Convert RGB to Lab
+                Mat labImage = new Mat();
+                CvInvoke.CvtColor(rgbImage, labImage, ColorConversion.Bgr2Lab);
+
+                // Use Image<Bgr, byte> as a 3-channel container
+                Image<Bgr, byte> labImgData = labImage.ToImage<Bgr, byte>();
+
+                for (int y = 0; y < labImgData.Height; y++)
+                {
+                    for (int x = 0; x < labImgData.Width; x++)
+                    {
+                        Bgr p = labImgData[y, x];
+
+                        double L = enableC1 ? p.Blue + mC1 : 0;
+                        double a = enableC2 ? p.Green + mC2 : 128; // default neutral for 8-bit
+                        double b_val = enableC3 ? p.Red + mC3 : 128; // default neutral for 8-bit
+
+                        // Clamp values
+                        labImgData[y, x] = new Bgr(
+                            ClampDouble(L, 0, 255),
+                            ClampDouble(a, 0, 255),
+                            ClampDouble(b_val, 0, 255)
+                        );
+                    }
+                }
+
+                // Convert back from Lab to BGR
+                Mat resultMat = new Mat();
+                CvInvoke.CvtColor(labImgData, resultMat, ColorConversion.Lab2Bgr);
+
+                return resultMat.ToImage<Bgr, byte>().ToBitmap();
+            }
+
+            // Fallback for RGB and CMYK manually processing
             Bitmap result = new Bitmap(source.Width, source.Height);
             for (int y = 0; y < source.Height; y++)
             {
                 for (int x = 0; x < source.Width; x++)
                 {
                     Color p = source.GetPixel(x, y);
+
+                    if (colorSpace == "CMYK")
+                    {
+                        // Calculate CMY values as requested
+                        int c = 255 - p.R; // Cyan
+                        int m = 255 - p.G; // Magenta
+                        int y_val = 255 - p.B; // Yellow
+
+                        // Extract Key (Black)
+                        int k = Math.Min(c, Math.Min(m, y_val));
+
+                        // Separate CMY from K
+                        c -= k;
+                        m -= k;
+                        y_val -= k;
+
+                        // Apply channel toggles
+                        if (!enableC1) c = 0;
+                        if (!enableC2) m = 0;
+                        if (!enableC3) y_val = 0;
+                        if (!enableC4) k = 0;
+
+                        // Apply modifiers from trackbars
+                        c += (int)mC1;
+                        m += (int)mC2;
+                        y_val += (int)mC3;
+                        k += (int)mC4;
+
+                        // Calculate final RGB
+                        int r_new = 255 - Clamp(c + k, 0, 255);
+                        int g_new = 255 - Clamp(m + k, 0, 255);
+                        int b_new = 255 - Clamp(y_val + k, 0, 255);
+
+                        Color cmykColor = Color.FromArgb(r_new, g_new, b_new);
+                        result.SetPixel(x, y, cmykColor);
+                        continue;
+                    }
+
                     float c1 = 0, c2 = 0, c3 = 0;
 
                     if (colorSpace == "RGB")

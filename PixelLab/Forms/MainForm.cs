@@ -17,8 +17,8 @@ namespace PixelLab.Forms
         private PictureBox workspacePictureBox;
         private Panel controlPanel;
         private ComboBox cmbColorSpace;
-        private CheckBox chkC1, chkC2, chkC3;
-        private TrackBar tbC1, tbC2, tbC3;
+        private CheckBox chkC1, chkC2, chkC3, chkC4;
+        private TrackBar tbC1, tbC2, tbC3, tbC4;
         private Button btnApply;
         private Image originalImage;
 
@@ -35,7 +35,7 @@ namespace PixelLab.Forms
             this.Controls.Add(controlPanel);
 
             cmbColorSpace = new ComboBox { Top = 10, Left = 10, Width = 200, DropDownStyle = ComboBoxStyle.DropDownList };
-            cmbColorSpace.Items.AddRange(new string[] { "RGB", "HSV", "YUV", "YCbCr" });
+            cmbColorSpace.Items.AddRange(new string[] { "RGB", "CMYK", "HSV", "YUV", "Lab", "YCbCr" });
             cmbColorSpace.SelectedIndex = 0;
             cmbColorSpace.SelectedIndexChanged += (s, e) => UpdateLabels();
             controlPanel.Controls.Add(cmbColorSpace);
@@ -43,14 +43,16 @@ namespace PixelLab.Forms
             chkC1 = new CheckBox { Top = 50, Left = 10, Text = "Channel 1", Checked = true };
             chkC2 = new CheckBox { Top = 120, Left = 10, Text = "Channel 2", Checked = true };
             chkC3 = new CheckBox { Top = 190, Left = 10, Text = "Channel 3", Checked = true };
-            controlPanel.Controls.Add(chkC1); controlPanel.Controls.Add(chkC2); controlPanel.Controls.Add(chkC3);
+            chkC4 = new CheckBox { Top = 260, Left = 10, Text = "Channel 4", Checked = true };
+            controlPanel.Controls.Add(chkC1); controlPanel.Controls.Add(chkC2); controlPanel.Controls.Add(chkC3); controlPanel.Controls.Add(chkC4);
 
             tbC1 = new TrackBar { Top = 70, Left = 10, Width = 200, Minimum = -255, Maximum = 255, Value = 0 };
             tbC2 = new TrackBar { Top = 140, Left = 10, Width = 200, Minimum = -255, Maximum = 255, Value = 0 };
             tbC3 = new TrackBar { Top = 210, Left = 10, Width = 200, Minimum = -255, Maximum = 255, Value = 0 };
-            controlPanel.Controls.Add(tbC1); controlPanel.Controls.Add(tbC2); controlPanel.Controls.Add(tbC3);
+            tbC4 = new TrackBar { Top = 280, Left = 10, Width = 200, Minimum = -255, Maximum = 255, Value = 0 };
+            controlPanel.Controls.Add(tbC1); controlPanel.Controls.Add(tbC2); controlPanel.Controls.Add(tbC3); controlPanel.Controls.Add(tbC4);
 
-            btnApply = new Button { Top = 280, Left = 10, Text = "Apply Transformation", Width = 200 };
+            btnApply = new Button { Top = 350, Left = 10, Text = "Apply Transformation", Width = 200 };
             btnApply.Click += BtnApply_Click;
             controlPanel.Controls.Add(btnApply);
 
@@ -72,12 +74,24 @@ namespace PixelLab.Forms
 
         private void UpdateLabels()
         {
+            chkC4.Visible = false;
+            tbC4.Visible = false;
+
             if (cmbColorSpace.SelectedItem.ToString() == "RGB")
             {
                 chkC1.Text = "Red"; chkC2.Text = "Green"; chkC3.Text = "Blue";
                 tbC1.Minimum = -255; tbC1.Maximum = 255; 
                 tbC2.Minimum = -255; tbC2.Maximum = 255; 
                 tbC3.Minimum = -255; tbC3.Maximum = 255;
+            }
+            else if (cmbColorSpace.SelectedItem.ToString() == "CMYK")
+            {
+                chkC1.Text = "Cyan"; chkC2.Text = "Magenta"; chkC3.Text = "Yellow"; chkC4.Text = "Key (Black)";
+                chkC4.Visible = true; tbC4.Visible = true;
+                tbC1.Minimum = -255; tbC1.Maximum = 255;
+                tbC2.Minimum = -255; tbC2.Maximum = 255;
+                tbC3.Minimum = -255; tbC3.Maximum = 255;
+                tbC4.Minimum = -255; tbC4.Maximum = 255;
             }
             else if (cmbColorSpace.SelectedItem.ToString() == "HSV")
             {
@@ -100,7 +114,14 @@ namespace PixelLab.Forms
                 tbC2.Minimum = -255; tbC2.Maximum = 255;
                 tbC3.Minimum = -255; tbC3.Maximum = 255;
             }
-            tbC1.Value = 0; tbC2.Value = 0; tbC3.Value = 0;
+            else if (cmbColorSpace.SelectedItem.ToString() == "Lab")
+            {
+                chkC1.Text = "L* (Lightness)"; chkC2.Text = "a* (Green-Red)"; chkC3.Text = "b* (Blue-Yellow)";
+                tbC1.Minimum = -255; tbC1.Maximum = 255;
+                tbC2.Minimum = -255; tbC2.Maximum = 255;
+                tbC3.Minimum = -255; tbC3.Maximum = 255;
+            }
+            tbC1.Value = 0; tbC2.Value = 0; tbC3.Value = 0; tbC4.Value = 0;
         }
 
         private void BtnApply_Click(object sender, EventArgs e)
@@ -108,8 +129,8 @@ namespace PixelLab.Forms
             if (originalImage == null) return;
             string space = cmbColorSpace.SelectedItem.ToString();
             Bitmap result = ColorSpaceConverter.ProcessImage((Bitmap)originalImage, space, 
-                chkC1.Checked, chkC2.Checked, chkC3.Checked, 
-                tbC1.Value, tbC2.Value, tbC3.Value);
+                chkC1.Checked, chkC2.Checked, chkC3.Checked, chkC4.Checked,
+                tbC1.Value, tbC2.Value, tbC3.Value, tbC4.Value);
 
             if (workspacePictureBox.Image != null && workspacePictureBox.Image != originalImage)
                 workspacePictureBox.Image.Dispose();
