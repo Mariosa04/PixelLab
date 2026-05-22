@@ -15,8 +15,9 @@ namespace PixelLab.Models
         public int Height { get; set; }
 
         public override string ToString() =>
-            $"File: {FileName} | Format: {Format} | " +
-            $"Size: {Width}x{Height} | " +
-            $"Storage: {FileSizeBytes / 1024.0:F1} KB";
+            $"File: {FileName} \n " +
+            $" Format: {Format}  \n" +
+            $"Size: {Width}x{Height} \n " +
+            $"Storage: {FileSizeBytes / 1024.0:F1} KB \n";
     }
 }
