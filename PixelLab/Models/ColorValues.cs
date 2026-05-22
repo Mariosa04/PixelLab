@@ -14,5 +14,10 @@ namespace PixelLab.Models
         public float Y_yuv, U, Vu;      // YUV
         public float L_lab, A_lab, B_lab;
         public float Y_ycbcr, Cb, Cr;
+
+
+        public float X;
+        public float Y;
+        public float Z;
     }
 }

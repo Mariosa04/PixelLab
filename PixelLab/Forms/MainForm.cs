@@ -20,6 +20,7 @@ namespace PixelLab.Forms
         private CheckBox chkC1, chkC2, chkC3, chkC4;
         private TrackBar tbC1, tbC2, tbC3, tbC4;
         private Button btnApply;
+        private Button btn3D;
         private Image originalImage;
 
         public MainForm()
@@ -55,6 +56,10 @@ namespace PixelLab.Forms
             btnApply = new Button { Top = 350, Left = 10, Text = "Apply Transformation", Width = 200 };
             btnApply.Click += BtnApply_Click;
             controlPanel.Controls.Add(btnApply);
+
+            btn3D = new Button { Top = 390, Left = 10, Text = "Show 3D Color Space", Width = 200 };
+            btn3D.Click += Btn3D_Click;
+            controlPanel.Controls.Add(btn3D);
 
             // Setup PictureBox to display the image
             this.workspacePictureBox = new PictureBox();
@@ -136,6 +141,18 @@ namespace PixelLab.Forms
                 workspacePictureBox.Image.Dispose();
 
             workspacePictureBox.Image = result;
+        }
+
+        private void Btn3D_Click(object sender, EventArgs e)
+        {
+            if (originalImage == null) return;
+
+            string mode = cmbColorSpace.SelectedItem.ToString();
+
+            Bitmap bmp = new Bitmap(originalImage);
+
+            ColorSpace3DForm form = new ColorSpace3DForm(bmp, mode);
+            form.Show();
         }
 
         private void MainForm_DragEnter(object sender, DragEventArgs e)
