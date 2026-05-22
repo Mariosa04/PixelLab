@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Drawing.Imaging;
 using Emgu.CV;
+using Emgu.CV.CvEnum;
+using Emgu.CV.Structure;
 using PixelLab.Core;
 
 namespace PixelLab.Forms
@@ -27,6 +29,7 @@ namespace PixelLab.Forms
         private Button btnReset;
         private Button btnSaveImage;
         private ComboBox cmbCompression;
+        private Bitmap currentImage;
 
         public MainForm()
         {
@@ -45,6 +48,7 @@ namespace PixelLab.Forms
             cmbColorSpace.Items.AddRange(new string[] { "RGB", "CMYK", "HSV", "YUV", "Lab", "YCbCr" });
             cmbColorSpace.SelectedIndex = 0;
             cmbColorSpace.SelectedIndexChanged += (s, e) => UpdateLabels();
+            cmbColorSpace.SelectedIndexChanged += ColorSpaceChanged;
             cmbColorSpace.DropDownClosed += UpdatePreview;
             controlPanel.Controls.Add(cmbColorSpace);
 
@@ -105,10 +109,8 @@ namespace PixelLab.Forms
             btnOpenImage = new Button { Top = 510, Left = 10, Width = 200, Height = 35, Text = "Open Image" };
             btnOpenImage.Click += BtnOpenImage_Click;
             controlPanel.Controls.Add(btnOpenImage);
-            //
-            btnReset = new Button{Top = 550,Left = 10,Width = 200,Height = 35,Text = "Reset Image"};
-            btnReset.Click += BtnReset_Click;
-            controlPanel.Controls.Add(btnReset);
+          
+         
 
             // Enable Drag and Drop on the Form
             this.AllowDrop = true;
@@ -141,9 +143,11 @@ namespace PixelLab.Forms
                     UpdateImageInfo(dialog.FileName);
                     if (workspacePictureBox.Image != null)
                         workspacePictureBox.Image.Dispose();
+                    currentImage =
+                        (Bitmap)originalImage.Clone();
 
                     workspacePictureBox.Image =
-                        (Image)originalImage.Clone();
+                        (Bitmap)currentImage.Clone();
                 }
                 catch (Exception ex)
                 {
@@ -155,6 +159,8 @@ namespace PixelLab.Forms
                 }
             }
         }
+
+       
         //////////////////////////////////////////
         private void UpdateLabels()
         {
@@ -207,37 +213,66 @@ namespace PixelLab.Forms
             }
           //  tbC1.Value = 0; tbC2.Value = 0; tbC3.Value = 0; tbC4.Value = 0;
         }
-
-        
-        //////////////////////////////////////
-        private void UpdatePreview(object sender,EventArgs e)
+        private void ColorSpaceChanged(object sender, EventArgs e)
         {
-            if (originalImage == null)
+            UpdateLabels();
+
+            if (currentImage == null)
                 return;
 
+            workspacePictureBox.Image?.Dispose();
 
-            string space = cmbColorSpace.SelectedItem.ToString();
-            Bitmap result = (Bitmap)originalImage;
-            result= ColorSpaceConverter.ProcessImage(result, space,
-                chkC1.Checked, chkC2.Checked, chkC3.Checked, chkC4.Checked,
-                tbC1.Value, tbC2.Value, tbC3.Value, tbC4.Value);
+            workspacePictureBox.Image =
+                (Bitmap)currentImage.Clone();
+        }
 
+        //////////////////////////////////////
+        private void UpdatePreview(object sender, EventArgs e)
+        {
+            if (currentImage == null)
+                return;
 
-            int levels = int.Parse(cmbQuantization.SelectedItem.ToString());
+            string space =
+                cmbColorSpace.SelectedItem.ToString();
+
+            Bitmap baseImage =
+                (Bitmap)currentImage.Clone();
+
+            // Apply color modifications
+            Bitmap result =
+                ColorSpaceConverter.ProcessImage(
+                    baseImage,
+                    space,
+                    chkC1.Checked,
+                    chkC2.Checked,
+                    chkC3.Checked,
+                    chkC4.Checked,
+                    tbC1.Value,
+                    tbC2.Value,
+                    tbC3.Value,
+                    tbC4.Value
+                );
+
+            // Quantization
+            int levels =
+                int.Parse(
+                    cmbQuantization.SelectedItem.ToString());
 
             result =
                 ColorQuantizer.Quantize(
-                   result,
+                    result,
                     levels);
-           
 
+            // Save state
+            currentImage?.Dispose();
+            currentImage =
+                (Bitmap)result.Clone();
 
-            if (workspacePictureBox.Image != null && workspacePictureBox.Image != originalImage)
-                workspacePictureBox.Image.Dispose();
+            // Display
+            workspacePictureBox.Image?.Dispose();
 
-
-            workspacePictureBox.Image = result;
-            
+            workspacePictureBox.Image =
+                (Bitmap)result.Clone();
         }
         ///////////////////////////////////////
         private void MainForm_DragEnter(object sender, DragEventArgs e)
@@ -261,7 +296,9 @@ namespace PixelLab.Forms
                     if (workspacePictureBox.Image != null && workspacePictureBox.Image != originalImage)
                         workspacePictureBox.Image.Dispose();
 
-                    workspacePictureBox.Image = (Image)originalImage.Clone();
+                    currentImage =(Bitmap)originalImage.Clone();
+
+                    workspacePictureBox.Image =(Bitmap)currentImage.Clone();
                 }
                 catch (Exception ex)
                 {
@@ -293,40 +330,9 @@ namespace PixelLab.Forms
             }
         }
         ///
-        private void BtnReset_Click(object sender,EventArgs e)
-        {
-            if (originalImage == null)
-                return;
+       
 
-            // Reset sliders
-            tbC1.Value = 0;
-            tbC2.Value = 0;
-            tbC3.Value = 0;
-            tbC4.Value = 0;
-
-            // Enable all channels
-            chkC1.Checked = true;
-            chkC2.Checked = true;
-            chkC3.Checked = true;
-            chkC4.Checked = true;
-
-            // Reset quantization
-            if (cmbQuantization != null)
-                cmbQuantization.SelectedIndex = 0;
-
-            // Restore original image
-            if (workspacePictureBox.Image != null &&
-                workspacePictureBox.Image != originalImage)
-            {
-                workspacePictureBox.Image.Dispose();
-            }
-
-            workspacePictureBox.Image =
-                (Bitmap)originalImage.Clone();
-
-            
-        }
-        //
+       
      
     }
 }
