@@ -27,9 +27,6 @@ namespace PixelLab.Forms
         private Image originalImage;
         private ComboBox cmbQuantization;
         private Label lblImageInfo;
-        private Button btnReset;
-        private Button btnSaveImage;
-        private ComboBox cmbCompression;
         private Bitmap currentImage;
         private ColorSpace3DForm color3DForm;
 
@@ -111,11 +108,10 @@ namespace PixelLab.Forms
             btnOpenImage = new Button { Top = 510, Left = 10, Width = 200, Height = 35, Text = "Open Image" };
             btnOpenImage.Click += BtnOpenImage_Click;
             controlPanel.Controls.Add(btnOpenImage);
-            btnReset = new Button { Top = 550, Left = 10, Width = 200, Height = 35, Text = "Reset Image" };
-            btnReset.Click += BtnReset_Click;
-            controlPanel.Controls.Add(btnReset);
-            ///
-         
+            
+           
+
+
             /////////////////
             Button btn3D = new Button{Top = 680,Left = 10,Width = 200,Text = "Open 3D Color Space"};
             btn3D.Click += Btn3D_Click;
@@ -146,16 +142,13 @@ namespace PixelLab.Forms
                     if (originalImage != null)
                         originalImage.Dispose();
 
-                    originalImage =
-                        Image.FromFile(dialog.FileName);
+                    originalImage =Image.FromFile(dialog.FileName);
                     UpdateImageInfo(dialog.FileName);
                     if (workspacePictureBox.Image != null)
                         workspacePictureBox.Image.Dispose();
-                    currentImage =
-                        (Bitmap)originalImage.Clone();
+                    currentImage =(Bitmap)originalImage.Clone();
 
-                    workspacePictureBox.Image =
-                        (Bitmap)currentImage.Clone();
+                    workspacePictureBox.Image =(Bitmap)currentImage.Clone();
                 }
                 catch (Exception ex)
                 {
@@ -234,19 +227,20 @@ namespace PixelLab.Forms
                 (Bitmap)currentImage.Clone();
         }
 
+
         //////////////////////////////////////
         private void UpdatePreview(object sender, EventArgs e)
         {
-            if (currentImage == null)
+            if (originalImage == null)
                 return;
 
             string space =
                 cmbColorSpace.SelectedItem.ToString();
 
+           
             Bitmap baseImage =
-                (Bitmap)currentImage.Clone();
+                (Bitmap)originalImage.Clone();
 
-            // Apply color modifications
             Bitmap result =
                 ColorSpaceConverter.ProcessImage(
                     baseImage,
@@ -261,7 +255,6 @@ namespace PixelLab.Forms
                     tbC4.Value
                 );
 
-            // Quantization
             int levels =
                 int.Parse(
                     cmbQuantization.SelectedItem.ToString());
@@ -271,26 +264,20 @@ namespace PixelLab.Forms
                     result,
                     levels);
 
-            // Save state
-            currentImage?.Dispose();
-            currentImage =
-                (Bitmap)result.Clone();
-
-            // Display
             workspacePictureBox.Image?.Dispose();
 
             workspacePictureBox.Image =
                 (Bitmap)result.Clone();
 
             if (color3DForm != null &&
-    !color3DForm.IsDisposed)
+                !color3DForm.IsDisposed)
             {
                 color3DForm.UpdateImage(
-                    (Bitmap)workspacePictureBox.Image,
-                    cmbColorSpace.SelectedItem.ToString());
+                    result,
+                    space);
             }
 
-
+            result.Dispose();
         }
         ///////////////////////////////////////
         private void MainForm_DragEnter(object sender, DragEventArgs e)
