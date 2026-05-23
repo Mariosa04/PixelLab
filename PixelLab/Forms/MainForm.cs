@@ -231,7 +231,7 @@ namespace PixelLab.Forms
                 tbC2.Minimum = -255; tbC2.Maximum = 255;
                 tbC3.Minimum = -255; tbC3.Maximum = 255;
             }
-            //   tbC1.Value = 0; tbC2.Value = 0; tbC3.Value = 0; tbC4.Value = 0;
+               tbC1.Value = 0; tbC2.Value = 0; tbC3.Value = 0; tbC4.Value = 0;
 
 
 
