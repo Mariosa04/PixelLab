@@ -123,7 +123,7 @@ namespace PixelLab.Forms
             GL.MatrixMode(MatrixMode.Modelview);
             GL.LoadMatrix(ref modelview);
 
-            GL.Rotate(angle, 1, 1, 0);
+          
 
             ColorSpaceVisualizer.DrawAxes();
             DrawScene();
@@ -265,13 +265,23 @@ namespace PixelLab.Forms
             if (bmp == null)
                 return;
 
+            // reset camera
+            zoom = 1f;
+
             imageBitmap?.Dispose();
             imageBitmap = new Bitmap(bmp);
             mode = colorMode;
 
-            points.Clear();
+            points?.Clear();
+
             gl.MakeCurrent();
+
+            GL.Clear(
+                ClearBufferMask.ColorBufferBit |
+                ClearBufferMask.DepthBufferBit);
+
             gl.Invalidate();
+            gl.Update();
         }
 
         ///
