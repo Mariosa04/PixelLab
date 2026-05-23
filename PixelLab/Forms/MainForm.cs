@@ -246,8 +246,7 @@ namespace PixelLab.Forms
 
             workspacePictureBox.Image?.Dispose();
 
-            workspacePictureBox.Image =
-                (Bitmap)currentImage.Clone();
+            workspacePictureBox.Image =(Bitmap)currentImage.Clone();
         }
 
 
@@ -281,8 +280,8 @@ namespace PixelLab.Forms
             result = ColorQuantizer.Quantize(result, levels);
 
             workspacePictureBox.Image?.Dispose();
-
             workspacePictureBox.Image = (Bitmap)result.Clone();
+
 
             if (color3DForm != null && !color3DForm.IsDisposed)
             {
@@ -372,19 +371,16 @@ namespace PixelLab.Forms
                 cmbQuantization.SelectedIndex = 0;
 
             // Remove modified image
-            if (workspacePictureBox.Image != null &&
-                workspacePictureBox.Image != originalImage)
+            if (workspacePictureBox.Image != null &&workspacePictureBox.Image != originalImage)
             {
                 workspacePictureBox.Image.Dispose();
             }
 
             // Restore original image
-            workspacePictureBox.Image =
-                (Bitmap)originalImage.Clone();
+            workspacePictureBox.Image =(Bitmap)originalImage.Clone();
 
             // Update 3D color space
-            if (color3DForm != null &&
-                !color3DForm.IsDisposed)
+            if (color3DForm != null &&!color3DForm.IsDisposed)
             {
                 color3DForm.UpdateImage(
                     (Bitmap)originalImage,
@@ -482,7 +478,7 @@ namespace PixelLab.Forms
 
             if (color3DForm == null || color3DForm.IsDisposed)
             {
-                color3DForm = new ColorSpace3DForm(new Bitmap(workspacePictureBox.Image), cmbColorSpace.SelectedItem.ToString());
+                color3DForm = new ColorSpace3DForm((Bitmap) workspacePictureBox.Image, cmbColorSpace.SelectedItem.ToString());
 
 
 
