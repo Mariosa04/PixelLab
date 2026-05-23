@@ -105,7 +105,7 @@ namespace PixelLab.Forms
             controlPanel.Controls.Add(lable1);
             lblImageInfo = new Label{Top = 350,Left = 10,Width = 220,Height = 120,BorderStyle = BorderStyle.FixedSingle,AutoSize = false};
             controlPanel.Controls.Add(lblImageInfo);
-
+            
 
             //
             btnOpenImage = new Button { Top = 510, Left = 10, Width = 200, Height = 35, Text = "Open Image" };
@@ -348,8 +348,8 @@ namespace PixelLab.Forms
             }
         }
         ///
+ 
 
-     
 
         private void Btn3D_Click(object sender,EventArgs e)
         {
