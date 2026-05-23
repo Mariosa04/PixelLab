@@ -1,4 +1,4 @@
-﻿using Emgu.CV;
+using Emgu.CV;
 using Emgu.CV.CvEnum;
 using Emgu.CV.Structure; 
 using PixelLab.Models;
@@ -54,8 +54,6 @@ namespace PixelLab.Core
                 // Convert back from HSV to BGR
                 Mat resultMat = new Mat();
                 CvInvoke.CvtColor(hsvImgData, resultMat, ColorConversion.Hsv2Bgr);
-
-
 
                 return resultMat.ToImage<Bgr, byte>().ToBitmap();
             }
@@ -262,12 +260,12 @@ namespace PixelLab.Core
             return value;
         }
 
-        public static void RgbToYuv(int r, int g, int b, out float y, out float u, out float v)
-        {
-            y = 0.299f * r + 0.587f * g + 0.114f * b;
-            u = -0.14713f * r - 0.28886f * g + 0.436f * b;
-            v = 0.615f * r - 0.51499f * g - 0.10001f * b;
-        }
+        //public static void RgbToYuv(int r, int g, int b, out float y, out float u, out float v)
+        //{
+        //    y = 0.299f * r + 0.587f * g + 0.114f * b;
+        //    u = -0.14713f * r - 0.28886f * g + 0.436f * b;
+        //    v = 0.615f * r - 0.51499f * g - 0.10001f * b;
+        //}
 
         //public static void YuvToRgb(float y, float u, float v, out int r, out int g, out int b)
         //{
@@ -278,23 +276,34 @@ namespace PixelLab.Core
 
         public static void ApplyHSV(byte r, byte g, byte b, ColorValues v)
         {
-            r = (int)(y + 1.13983f * v);
-            g = (int)(y - 0.39465f * u - 0.58060f * v);
-            b = (int)(y + 2.03211f * u);
-        }
+            float rf = r / 255f;
+            float gf = g / 255f;
+            float bf = b / 255f;
 
-        public static float F(float t)
-        {
-            return (t > 0.008856f)
-                ? (float)Math.Pow(t, 1f / 3f)
-                : (7.787f * t + 16f / 116f);
-        }
+            float max = Math.Max(rf, Math.Max(gf, bf));
+            float min = Math.Min(rf, Math.Min(gf, bf));
+            float delta = max - min;
 
-        public static void ApplyHSV(Color c, ColorValues v)
-        {
-            v.H = c.GetHue();
-            v.S = c.GetSaturation() * 100;
-            v.V = c.GetBrightness() * 100;
+            float h = 0;
+
+            if (delta != 0)
+            {
+                if (max == rf)
+                    h = 60f * (((gf - bf) / delta) % 6);
+                else if (max == gf)
+                    h = 60f * (((bf - rf) / delta) + 2);
+                else
+                    h = 60f * (((rf - gf) / delta) + 4);
+            }
+
+            if (h < 0) h += 360;
+
+            float s = max == 0 ? 0 : delta / max;
+            float vval = max;
+
+            v.H = h;
+            v.S = s * 100f;
+            v.V = vval * 100f;
         }
         public static void ApplyCMYK(byte r, byte g, byte b, ColorValues v)
         {
