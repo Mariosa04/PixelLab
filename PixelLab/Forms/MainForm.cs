@@ -27,6 +27,9 @@ namespace PixelLab.Forms
         private Image originalImage;
         private ComboBox cmbQuantization;
         private Label lblImageInfo;
+        private Button btnReset;
+        private Button btnSaveImage;
+        private ComboBox cmbCompression;
         private Bitmap currentImage;
         private ColorSpace3DForm color3DForm;
 
@@ -108,8 +111,24 @@ namespace PixelLab.Forms
             btnOpenImage = new Button { Top = 510, Left = 10, Width = 200, Height = 35, Text = "Open Image" };
             btnOpenImage.Click += BtnOpenImage_Click;
             controlPanel.Controls.Add(btnOpenImage);
+            btnReset = new Button { Top = 550, Left = 10, Width = 200, Height = 35, Text = "Reset Image" };
+            btnReset.Click += BtnReset_Click;
+            controlPanel.Controls.Add(btnReset);
             
-           
+            ///
+            btnReset = new Button { Top = 550, Left = 10, Width = 200, Height = 35, Text = "Reset Image" };
+            btnReset.Click += BtnReset_Click;
+            controlPanel.Controls.Add(btnReset);
+            ///
+            btnSaveImage = new Button { Top = 600, Left = 10, Width = 200, Height = 35, Text = "Save Image" };
+            btnSaveImage.Click += BtnSaveImage_Click;
+            controlPanel.Controls.Add(btnSaveImage);
+            //
+            ///
+            cmbCompression = new ComboBox { Top = 650, Left = 10, Width = 200, DropDownStyle = ComboBoxStyle.DropDownList };
+            cmbCompression.Items.AddRange(new string[] { "Normal", "RLE Method", "DCT Method" });
+            cmbCompression.SelectedIndex = 0;
+            controlPanel.Controls.Add(cmbCompression);
 
 
             /////////////////
@@ -142,13 +161,16 @@ namespace PixelLab.Forms
                     if (originalImage != null)
                         originalImage.Dispose();
 
-                    originalImage =Image.FromFile(dialog.FileName);
+                    originalImage =
+                        Image.FromFile(dialog.FileName);
                     UpdateImageInfo(dialog.FileName);
                     if (workspacePictureBox.Image != null)
                         workspacePictureBox.Image.Dispose();
-                    currentImage =(Bitmap)originalImage.Clone();
+                    currentImage =
+                        (Bitmap)originalImage.Clone();
 
-                    workspacePictureBox.Image =(Bitmap)currentImage.Clone();
+                    workspacePictureBox.Image =
+                        (Bitmap)currentImage.Clone();
                 }
                 catch (Exception ex)
                 {
@@ -212,8 +234,12 @@ namespace PixelLab.Forms
                 tbC2.Minimum = -255; tbC2.Maximum = 255;
                 tbC3.Minimum = -255; tbC3.Maximum = 255;
             }
-          //  tbC1.Value = 0; tbC2.Value = 0; tbC3.Value = 0; tbC4.Value = 0;
+            //   tbC1.Value = 0; tbC2.Value = 0; tbC3.Value = 0; tbC4.Value = 0;
+            
+
+           
         }
+
         private void ColorSpaceChanged(object sender, EventArgs e)
         {
             UpdateLabels();
@@ -234,12 +260,10 @@ namespace PixelLab.Forms
             if (originalImage == null)
                 return;
 
-            string space =
-                cmbColorSpace.SelectedItem.ToString();
+            string space =cmbColorSpace.SelectedItem.ToString();
 
-           
-            Bitmap baseImage =
-                (Bitmap)originalImage.Clone();
+
+            Bitmap baseImage =(Bitmap)currentImage.Clone();
 
             Bitmap result =
                 ColorSpaceConverter.ProcessImage(
@@ -255,27 +279,19 @@ namespace PixelLab.Forms
                     tbC4.Value
                 );
 
-            int levels =
-                int.Parse(
-                    cmbQuantization.SelectedItem.ToString());
+            int levels =int.Parse(cmbQuantization.SelectedItem.ToString());
 
-            result =
-                ColorQuantizer.Quantize(
-                    result,
-                    levels);
+            result =ColorQuantizer.Quantize(result,levels);
 
             workspacePictureBox.Image?.Dispose();
 
-            workspacePictureBox.Image =
-                (Bitmap)result.Clone();
+            workspacePictureBox.Image =(Bitmap)result.Clone();
 
-            if (color3DForm != null &&
-                !color3DForm.IsDisposed)
+            if (color3DForm != null &&!color3DForm.IsDisposed)
             {
-                color3DForm.UpdateImage(
-                    result,
-                    space);
+                color3DForm.UpdateImage(result,space);
             }
+
 
             result.Dispose();
         }
@@ -298,6 +314,7 @@ namespace PixelLab.Forms
                     if (originalImage != null) originalImage.Dispose();
                     originalImage = Image.FromFile(files[0]);
                     UpdateImageInfo(files[0]);
+
                     if (workspacePictureBox.Image != null && workspacePictureBox.Image != originalImage)
                         workspacePictureBox.Image.Dispose();
 
@@ -335,7 +352,133 @@ namespace PixelLab.Forms
             }
         }
         ///
+        ///
+        private void BtnReset_Click(
+            object sender,
+            EventArgs e)
+        {
+            if (originalImage == null)
+                return;
 
+            // Reset sliders
+            tbC1.Value = 0;
+            tbC2.Value = 0;
+            tbC3.Value = 0;
+            tbC4.Value = 0;
+
+            // Enable channels
+            chkC1.Checked = true;
+            chkC2.Checked = true;
+            chkC3.Checked = true;
+            chkC4.Checked = true;
+
+            // Reset quantization
+            if (cmbQuantization != null)
+                cmbQuantization.SelectedIndex = 0;
+
+            // Remove modified image
+            if (workspacePictureBox.Image != null &&
+                workspacePictureBox.Image != originalImage)
+            {
+                workspacePictureBox.Image.Dispose();
+            }
+
+            // Restore original image
+            workspacePictureBox.Image =
+                (Bitmap)originalImage.Clone();
+
+            // Update 3D color space
+            if (color3DForm != null &&
+                !color3DForm.IsDisposed)
+            {
+                color3DForm.UpdateImage(
+                    (Bitmap)originalImage,
+                    cmbColorSpace
+                        .SelectedItem
+                        .ToString());
+            }
+
+        }
+        //
+        private void BtnSaveImage_Click(object sender, EventArgs e)
+        {
+            if (currentImage == null)
+            {
+                MessageBox.Show(
+                    "No image to save.",
+                    "Warning",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+
+                return;
+            }
+
+            SaveFileDialog saveDialog = new SaveFileDialog();
+
+            saveDialog.Title = "Save Modified Image";
+
+            saveDialog.Filter =
+                "PNG Image|*.png|" +
+                "JPEG Image|*.jpg|" +
+                "Bitmap Image|*.bmp|" +
+                "TIFF Image|*.tiff";
+
+            saveDialog.DefaultExt = "png";
+
+            if (saveDialog.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    Bitmap imageToSave = new Bitmap(workspacePictureBox.Image);
+
+                    string method = cmbCompression.SelectedItem.ToString();
+
+                    // NORMAL SAVE
+                    if (method == "Normal")
+                    {
+                        imageToSave.Save(saveDialog.FileName);
+                    }
+
+                    // RLE METHOD
+                    else if (method == "RLE Method")
+                    {
+                        imageToSave.Save(saveDialog.FileName, ImageFormat.Tiff);
+                    }
+
+                    // DCT METHOD
+                    else if (method == "DCT Method")
+                    {
+                        ImageCodecInfo jpgEncoder = ImageCodecInfo.GetImageEncoders()
+                            .First(codec =>
+                             codec.FormatID == ImageFormat.Jpeg.Guid);
+
+                        EncoderParameters encParams = new EncoderParameters(1);
+
+                        encParams.Param[0] = new EncoderParameter(Encoder.Quality, 50L);
+
+                        imageToSave.Save(saveDialog.FileName, jpgEncoder, encParams);
+                    }
+
+                    MessageBox.Show(
+                        "Image saved successfully.",
+                        "Success",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(
+                        ex.Message,
+                        "Save Error",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
+                }
+            }
+        }
+
+       
+        //
+        
      
 
         private void Btn3D_Click(object sender,EventArgs e)
@@ -347,110 +490,21 @@ namespace PixelLab.Forms
             {
                 color3DForm =new ColorSpace3DForm(new Bitmap(workspacePictureBox.Image),cmbColorSpace.SelectedItem.ToString());
 
-                color3DForm.ColorSelected +=OnColorSelected;
+
 
                 color3DForm.Show();
 
                 // load current image immediately
-                color3DForm.UpdateImage(new Bitmap(workspacePictureBox.Image),cmbColorSpace.SelectedItem.ToString());
+                color3DForm.UpdateImage(currentImage,cmbColorSpace.SelectedItem.ToString());
             }
             else
             {
                 color3DForm.Focus();
 
                 // refresh if already opened
-                color3DForm.UpdateImage(new Bitmap(workspacePictureBox.Image),cmbColorSpace.SelectedItem.ToString());
+                color3DForm.UpdateImage(currentImage,cmbColorSpace.SelectedItem.ToString());
             }
         }
-        private void OnColorSelected(ColorValues v)
-        {
-            string space =cmbColorSpace.SelectedItem?.ToString();
-
-            if (space == null)
-                return;
-
-            switch (space)
-            {
-                case "RGB":
-                    tbC1.Value =Clamp(v.R, tbC1.Minimum, tbC1.Maximum);
-
-                    tbC2.Value =Clamp(v.G, tbC2.Minimum, tbC2.Maximum);
-
-                    tbC3.Value =Clamp(v.B, tbC3.Minimum, tbC3.Maximum);
-                    break;
-
-                case "HSV":
-                    tbC1.Value =
-                        Clamp((int)v.H, tbC1.Minimum, tbC1.Maximum);
-
-                    tbC2.Value =
-                        Clamp((int)v.S, tbC2.Minimum, tbC2.Maximum);
-
-                    tbC3.Value =
-                        Clamp((int)v.V, tbC3.Minimum, tbC3.Maximum);
-                    break;
-
-                case "YUV":
-                    tbC1.Value =
-                        Clamp((int)v.Y_yuv, tbC1.Minimum, tbC1.Maximum);
-
-                    tbC2.Value =
-                        Clamp((int)v.U, tbC2.Minimum, tbC2.Maximum);
-
-                    tbC3.Value =
-                        Clamp((int)v.Vu, tbC3.Minimum, tbC3.Maximum);
-                    break;
-
-                case "YCbCr":
-                    tbC1.Value =
-                        Clamp((int)v.Y_ycbcr, tbC1.Minimum, tbC1.Maximum);
-
-                    tbC2.Value =
-                        Clamp((int)v.Cb, tbC2.Minimum, tbC2.Maximum);
-
-                    tbC3.Value =
-                        Clamp((int)v.Cr, tbC3.Minimum, tbC3.Maximum);
-                    break;
-
-                case "Lab":
-                    tbC1.Value =
-                        Clamp((int)v.L_lab, tbC1.Minimum, tbC1.Maximum);
-
-                    tbC2.Value =
-                        Clamp((int)v.A_lab, tbC2.Minimum, tbC2.Maximum);
-
-                    tbC3.Value =
-                        Clamp((int)v.B_lab, tbC3.Minimum, tbC3.Maximum);
-                    break;
-
-                case "CMYK":
-                    tbC1.Value =
-                        Clamp((int)(v.C_val * 255), tbC1.Minimum, tbC1.Maximum);
-
-                    tbC2.Value =
-                        Clamp((int)(v.M * 255), tbC2.Minimum, tbC2.Maximum);
-
-                    tbC3.Value =
-                        Clamp((int)(v.Y_val * 255), tbC3.Minimum, tbC3.Maximum);
-
-                    tbC4.Value =
-                        Clamp((int)(v.K * 255), tbC4.Minimum, tbC4.Maximum);
-                    break;
-            }
-
-            UpdatePreview(this,
-                EventArgs.Empty);
-        }
-
-        private int Clamp(int value, int min, int max)
-        {
-            if (value < min)
-                return min;
-
-            if (value > max)
-                return max;
-
-            return value;
-        }
+     
     }
 }

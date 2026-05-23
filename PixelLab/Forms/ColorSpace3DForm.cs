@@ -12,7 +12,6 @@ namespace PixelLab.Forms
     public class ColorSpace3DForm : Form
     {
         private GLControl gl;
-        private float angle = 0;
         private Bitmap imageBitmap;
         private string mode;
 

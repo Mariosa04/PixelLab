@@ -52,6 +52,8 @@ namespace PixelLab.Core
                 Mat resultMat = new Mat();
                 CvInvoke.CvtColor(hsvImgData, resultMat, ColorConversion.Hsv2Bgr);
 
+
+
                 return resultMat.ToImage<Bgr, byte>().ToBitmap();
             }
             else if (colorSpace == "YCbCr")
@@ -257,6 +259,7 @@ namespace PixelLab.Core
             return value;
         }
 
+
         public static void RgbToYuv(int r, int g, int b, out float y, out float u, out float v)
         {
             y = 0.299f * r + 0.587f * g + 0.114f * b;
@@ -270,7 +273,7 @@ namespace PixelLab.Core
             g = (int)(y - 0.39465f * u - 0.58060f * v);
             b = (int)(y + 2.03211f * u);
         }
-
+        //////////////////////////////////////////////////
         public static float F(float t)
         {
             return (t > 0.008856f)
@@ -283,6 +286,7 @@ namespace PixelLab.Core
             v.H = c.GetHue();
             v.S = c.GetSaturation() * 100;
             v.V = c.GetBrightness() * 100;
+
         }
 
         public static void ApplyCMYK(Color c, ColorValues v)
