@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.37206.5
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PixelLab", "PixelLab.csproj", "{F36417EC-5FB7-4999-8823-8143D4F2CF13}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F36417EC-5FB7-4999-8823-8143D4F2CF13}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F36417EC-5FB7-4999-8823-8143D4F2CF13}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F36417EC-5FB7-4999-8823-8143D4F2CF13}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F36417EC-5FB7-4999-8823-8143D4F2CF13}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {53C748A8-5458-43E0-9D27-9759BCD66B74}
+	EndGlobalSection
+EndGlobal
