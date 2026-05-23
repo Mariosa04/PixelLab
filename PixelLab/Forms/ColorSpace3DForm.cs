@@ -26,6 +26,8 @@ namespace PixelLab.Forms
 
         private List<PointData> points = new List<PointData>();
 
+        public event Action<ColorValues>ColorSelected;
+
         public ColorSpace3DForm(Bitmap bmp, string colorMode)
         {
             imageBitmap = bmp;
@@ -125,6 +127,12 @@ namespace PixelLab.Forms
 
             ColorSpaceVisualizer.DrawAxes();
             DrawScene();
+            if (points != null &&
+    points.Count > 0)
+            {
+                ShowColorValues(
+                    points[0].Value);
+            }
 
             gl.SwapBuffers();
         }
@@ -159,6 +167,8 @@ namespace PixelLab.Forms
                     points = ColorSpaceVisualizer.DrawYCbCrSpace(imageBitmap);
                     break;
             }
+
+
         }
 
         private void OnPick(object sender, MouseEventArgs e)
@@ -190,6 +200,9 @@ namespace PixelLab.Forms
             if (best != null)
             {
                 ShowColorValues(best.Value);
+
+                ColorSelected?.Invoke(
+                    best.Value);
             }
         }
 
@@ -228,5 +241,40 @@ namespace PixelLab.Forms
 
             lblInfo.Text = text;
         }
+
+        private void InitializeComponent()
+        {
+            this.SuspendLayout();
+            // 
+            // ColorSpace3DForm
+            // 
+            this.ClientSize = new System.Drawing.Size(278, 244);
+            this.Name = "ColorSpace3DForm";
+            this.Load += new System.EventHandler(this.ColorSpace3DForm_Load);
+            this.ResumeLayout(false);
+
+        }
+
+        private void ColorSpace3DForm_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        public void UpdateImage(Bitmap bmp, string colorMode)
+        {
+            if (bmp == null)
+                return;
+
+            imageBitmap?.Dispose();
+            imageBitmap = new Bitmap(bmp);
+            mode = colorMode;
+
+            points.Clear();
+            gl.MakeCurrent();
+            gl.Invalidate();
+        }
+
+        ///
+
     }
 }

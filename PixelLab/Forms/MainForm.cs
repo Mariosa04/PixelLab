@@ -12,6 +12,7 @@ using Emgu.CV;
 using Emgu.CV.CvEnum;
 using Emgu.CV.Structure;
 using PixelLab.Core;
+using PixelLab.Models;
 
 namespace PixelLab.Forms
 {
@@ -30,6 +31,7 @@ namespace PixelLab.Forms
         private Button btnSaveImage;
         private ComboBox cmbCompression;
         private Bitmap currentImage;
+        private ColorSpace3DForm color3DForm;
 
         public MainForm()
         {
@@ -109,9 +111,15 @@ namespace PixelLab.Forms
             btnOpenImage = new Button { Top = 510, Left = 10, Width = 200, Height = 35, Text = "Open Image" };
             btnOpenImage.Click += BtnOpenImage_Click;
             controlPanel.Controls.Add(btnOpenImage);
-          
+            btnReset = new Button { Top = 550, Left = 10, Width = 200, Height = 35, Text = "Reset Image" };
+            btnReset.Click += BtnReset_Click;
+            controlPanel.Controls.Add(btnReset);
+            ///
          
-
+            /////////////////
+            Button btn3D = new Button{Top = 680,Left = 10,Width = 200,Text = "Open 3D Color Space"};
+            btn3D.Click += Btn3D_Click;
+            controlPanel.Controls.Add(btn3D);
             // Enable Drag and Drop on the Form
             this.AllowDrop = true;
             this.DragEnter += MainForm_DragEnter;
@@ -273,6 +281,16 @@ namespace PixelLab.Forms
 
             workspacePictureBox.Image =
                 (Bitmap)result.Clone();
+
+            if (color3DForm != null &&
+    !color3DForm.IsDisposed)
+            {
+                color3DForm.UpdateImage(
+                    (Bitmap)workspacePictureBox.Image,
+                    cmbColorSpace.SelectedItem.ToString());
+            }
+
+
         }
         ///////////////////////////////////////
         private void MainForm_DragEnter(object sender, DragEventArgs e)
@@ -330,9 +348,122 @@ namespace PixelLab.Forms
             }
         }
         ///
-       
 
-       
      
+
+        private void Btn3D_Click(object sender,EventArgs e)
+        {
+            if (workspacePictureBox.Image == null)
+                return;
+
+            if (color3DForm == null ||color3DForm.IsDisposed)
+            {
+                color3DForm =new ColorSpace3DForm(new Bitmap(workspacePictureBox.Image),cmbColorSpace.SelectedItem.ToString());
+
+                color3DForm.ColorSelected +=OnColorSelected;
+
+                color3DForm.Show();
+
+                // load current image immediately
+                color3DForm.UpdateImage(new Bitmap(workspacePictureBox.Image),cmbColorSpace.SelectedItem.ToString());
+            }
+            else
+            {
+                color3DForm.Focus();
+
+                // refresh if already opened
+                color3DForm.UpdateImage(new Bitmap(workspacePictureBox.Image),cmbColorSpace.SelectedItem.ToString());
+            }
+        }
+        private void OnColorSelected(ColorValues v)
+        {
+            string space =cmbColorSpace.SelectedItem?.ToString();
+
+            if (space == null)
+                return;
+
+            switch (space)
+            {
+                case "RGB":
+                    tbC1.Value =Clamp(v.R, tbC1.Minimum, tbC1.Maximum);
+
+                    tbC2.Value =Clamp(v.G, tbC2.Minimum, tbC2.Maximum);
+
+                    tbC3.Value =Clamp(v.B, tbC3.Minimum, tbC3.Maximum);
+                    break;
+
+                case "HSV":
+                    tbC1.Value =
+                        Clamp((int)v.H, tbC1.Minimum, tbC1.Maximum);
+
+                    tbC2.Value =
+                        Clamp((int)v.S, tbC2.Minimum, tbC2.Maximum);
+
+                    tbC3.Value =
+                        Clamp((int)v.V, tbC3.Minimum, tbC3.Maximum);
+                    break;
+
+                case "YUV":
+                    tbC1.Value =
+                        Clamp((int)v.Y_yuv, tbC1.Minimum, tbC1.Maximum);
+
+                    tbC2.Value =
+                        Clamp((int)v.U, tbC2.Minimum, tbC2.Maximum);
+
+                    tbC3.Value =
+                        Clamp((int)v.Vu, tbC3.Minimum, tbC3.Maximum);
+                    break;
+
+                case "YCbCr":
+                    tbC1.Value =
+                        Clamp((int)v.Y_ycbcr, tbC1.Minimum, tbC1.Maximum);
+
+                    tbC2.Value =
+                        Clamp((int)v.Cb, tbC2.Minimum, tbC2.Maximum);
+
+                    tbC3.Value =
+                        Clamp((int)v.Cr, tbC3.Minimum, tbC3.Maximum);
+                    break;
+
+                case "Lab":
+                    tbC1.Value =
+                        Clamp((int)v.L_lab, tbC1.Minimum, tbC1.Maximum);
+
+                    tbC2.Value =
+                        Clamp((int)v.A_lab, tbC2.Minimum, tbC2.Maximum);
+
+                    tbC3.Value =
+                        Clamp((int)v.B_lab, tbC3.Minimum, tbC3.Maximum);
+                    break;
+
+                case "CMYK":
+                    tbC1.Value =
+                        Clamp((int)(v.C_val * 255), tbC1.Minimum, tbC1.Maximum);
+
+                    tbC2.Value =
+                        Clamp((int)(v.M * 255), tbC2.Minimum, tbC2.Maximum);
+
+                    tbC3.Value =
+                        Clamp((int)(v.Y_val * 255), tbC3.Minimum, tbC3.Maximum);
+
+                    tbC4.Value =
+                        Clamp((int)(v.K * 255), tbC4.Minimum, tbC4.Maximum);
+                    break;
+            }
+
+            UpdatePreview(this,
+                EventArgs.Empty);
+        }
+
+        private int Clamp(int value, int min, int max)
+        {
+            if (value < min)
+                return min;
+
+            if (value > max)
+                return max;
+
+            return value;
+        }
     }
 }
