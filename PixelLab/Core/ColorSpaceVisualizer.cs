@@ -52,83 +52,51 @@ namespace PixelLab.Core
 
             GL.End();
         }
-        public static ColorValues Convert(Color c)
-        {
-            ColorValues v = new ColorValues();
 
-            v.R = c.R;
-            v.G = c.G;
-            v.B = c.B;
-
-            ColorSpaceConverter.ApplyCMYK(c, v);
-            ColorSpaceConverter.ApplyHSV(c, v);
-            ColorSpaceConverter.ApplyYUV(c, v);
-            ColorSpaceConverter.ApplyLab(c, v);
-            ColorSpaceConverter.ApplyYCbCr(c, v);
-
-            return v;
-        }
 
         public static List<PointData> DrawRgbCube(Bitmap imageBitmap)
         {
-            var points = new List<PointData>();
+            var points = ImageProcessor.ExtractPoints(imageBitmap);
 
             DrawCubeWireframe();
 
             GL.Begin(PrimitiveType.Points);
 
-            for (int y = 0; y < imageBitmap.Height; y += 2)
-                for (int x = 0; x < imageBitmap.Width; x += 2)
-                {
-                    ColorValues v = Convert(imageBitmap.GetPixel(x, y));
-
-                    Vector3 p = new Vector3(v.R - 128, v.G - 128, v.B - 128);
-
-                    points.Add(new PointData
-                    {
-                        Pos = p,
-                        Value = v
-                    });
-
-                    GL.Color3(v.R, v.G, v.B);
-                    GL.Vertex3(p);
-                }
+            foreach (var p in points)
+            {
+                GL.Color3(p.Value.R, p.Value.G, p.Value.B);
+                GL.Vertex3(p.Pos);
+            }
 
             GL.End();
+
             return points;
         }
 
         public static List<PointData> DrawHsvCylinder(Bitmap imageBitmap)
         {
-            var points = new List<PointData>();
+            var points = ImageProcessor.ExtractPoints(imageBitmap);
+
             GL.Begin(PrimitiveType.Points);
 
-            for (int y = 0; y < imageBitmap.Height; y += 2)
-                for (int x = 0; x < imageBitmap.Width; x += 2)
-                {
-                    ColorValues v = Convert(imageBitmap.GetPixel(x, y));
+            foreach (var v in points)
+            {
+                float hue = v.Value.H;
+                float sat = v.Value.S / 100f;
+                float val = v.Value.V / 100f;
 
-                    float hue = v.H;
-                    float sat = v.S / 100f; 
-                    float val = v.V / 100f;   
+                float radius = sat * (val * 128);
+                float angle = hue * (float)Math.PI / 180f;
 
-                    float radius = sat * (val * 128);
-                    float angle = hue * (float)Math.PI / 180f;
+                float x = radius * (float)Math.Cos(angle);
+                float y = radius * (float)Math.Sin(angle);
+                float z = val * 255;
 
-                    float X = radius * (float)Math.Cos(angle);
-                    float Y = radius * (float)Math.Sin(angle);
-                    float Z = val * 255;
+                Vector3 p = new Vector3(x, y, z - 128);
 
-                    var p = new PointData
-                    {
-                        Pos = new Vector3(X, Y, Z - 128),
-                        Value = v
-                    };
-
-                    points.Add(p);
-                    GL.Color3(v.R, v.G, v.B);
-                    GL.Vertex3(p.Pos);
-                }
+                GL.Color3(v.Value.R, v.Value.G, v.Value.B);
+                GL.Vertex3(p);
+            }
 
             GL.End();
             return points;
@@ -136,39 +104,30 @@ namespace PixelLab.Core
 
         public static List<PointData> DrawCmykCloud(Bitmap imageBitmap)
         {
-            var points = new List<PointData>();
+            var points = ImageProcessor.ExtractPoints(imageBitmap);
 
             GL.Begin(PrimitiveType.Points);
 
-            for (int y = 0; y < imageBitmap.Height; y += 2)
-                for (int x = 0; x < imageBitmap.Width; x += 2)
-                {
-                    ColorValues v = Convert(imageBitmap.GetPixel(x, y));
+            foreach (var v in points)
+            {
+                float r = v.Value.R / 255f;
+                float g = v.Value.G / 255f;
+                float b = v.Value.B / 255f;
 
-                    float r = v.R / 255f;
-                    float g = v.G / 255f;
-                    float b = v.B / 255f;
+                float k = 1 - Math.Max(r, Math.Max(g, b));
+                float c = 1 - r - k;
+                float m = 1 - g - k;
+                float y = 1 - b - k;
 
-                    float K = 1 - Math.Max(r, Math.Max(g, b));
-                    float C = (1 - r - K);
-                    float M = (1 - g - K);
-                    float Y = (1 - b - K);
+                Vector3 p = new Vector3(
+                    c * 255 - 128,
+                    m * 255 - 128,
+                    y * 255 - 128
+                );
 
-                    float X = C * 255;
-                    float Ypos = M * 255;
-                    float Z = Y * 255;
-
-                    var p = new PointData
-                    {
-                        Pos = new Vector3(X - 128, Ypos - 128, Z - 128),
-                        Value = v
-                    };
-
-                    points.Add(p);
-
-                    GL.Color3(v.R, v.G, v.B);
-                    GL.Vertex3(p.Pos);
-                }
+                GL.Color3(v.Value.R, v.Value.G, v.Value.B);
+                GL.Vertex3(p);
+            }
 
             GL.End();
             return points;
@@ -176,30 +135,21 @@ namespace PixelLab.Core
 
         public static List<PointData> DrawYuvPlane(Bitmap imageBitmap)
         {
-            var points = new List<PointData>();
+            var points = ImageProcessor.ExtractPoints(imageBitmap);
 
             GL.Begin(PrimitiveType.Points);
 
-            for (int y = 0; y < imageBitmap.Height; y += 2)
-                for (int x = 0; x < imageBitmap.Width; x += 2)
-                {
-                    ColorValues v = Convert(imageBitmap.GetPixel(x, y));
+            foreach (var v in points)
+            {
+                Vector3 p = new Vector3(
+                    v.Value.Y_yuv - 128,
+                    v.Value.U,
+                    v.Value.Vu
+                );
 
-                    float Yl = v.Y_yuv;
-                    float U = v.U;
-                    float V = v.Vu;
-
-                    var p = new PointData
-                    {
-                        Pos = new Vector3(Yl - 128, U, V),
-                        Value = v
-                    };
-
-                    points.Add(p);
-
-                    GL.Color3(v.R, v.G, v.B);
-                    GL.Vertex3(p.Pos);
-                }
+                GL.Color3(v.Value.R, v.Value.G, v.Value.B);
+                GL.Vertex3(p);
+            }
 
             GL.End();
             return points;
@@ -207,30 +157,21 @@ namespace PixelLab.Core
 
         public static List<PointData> DrawLabSpace(Bitmap imageBitmap)
         {
-            var points = new List<PointData>();
+            var points = ImageProcessor.ExtractPoints(imageBitmap);
 
             GL.Begin(PrimitiveType.Points);
 
-            for (int y = 0; y < imageBitmap.Height; y += 2)
-                for (int x = 0; x < imageBitmap.Width; x += 2)
-                {
-                    ColorValues v = Convert(imageBitmap.GetPixel(x, y));
+            foreach (var v in points)
+            {
+                Vector3 p = new Vector3(
+                    v.Value.L_lab - 128,
+                    v.Value.A_lab,
+                    v.Value.B_lab
+                );
 
-                    float L = v.L_lab;
-                    float a = v.A_lab;
-                    float b = v.B_lab;
-
-                    var p = new PointData
-                    {
-                        Pos = new Vector3(L - 128, a, b),
-                        Value = v
-                    };
-
-                    points.Add(p);
-
-                    GL.Color3(v.R, v.G, v.B);
-                    GL.Vertex3(p.Pos);
-                }
+                GL.Color3(v.Value.R, v.Value.G, v.Value.B);
+                GL.Vertex3(p);
+            }
 
             GL.End();
             return points;
@@ -238,30 +179,21 @@ namespace PixelLab.Core
 
         public static List<PointData> DrawYCbCrSpace(Bitmap imageBitmap)
         {
-            var points = new List<PointData>();
+            var points = ImageProcessor.ExtractPoints(imageBitmap);
 
             GL.Begin(PrimitiveType.Points);
 
-            for (int y = 0; y < imageBitmap.Height; y += 2)
-                for (int x = 0; x < imageBitmap.Width; x += 2)
-                {
-                    ColorValues v = Convert(imageBitmap.GetPixel(x, y));
+            foreach (var v in points)
+            {
+                Vector3 p = new Vector3(
+                    v.Value.Y_ycbcr - 128,
+                    v.Value.Cb,
+                    v.Value.Cr
+                );
 
-                    float Yl = v.Y_ycbcr;
-                    float Cb = v.Cb;
-                    float Cr = v.Cr;
-
-                    var p = new PointData
-                    {
-                        Pos = new Vector3(Yl - 128, Cb, Cr),
-                        Value = v
-                    };
-
-                    points.Add(p);
-
-                    GL.Color3(v.R, v.G, v.B);
-                    GL.Vertex3(p.Pos);
-                }
+                GL.Color3(v.Value.R, v.Value.G, v.Value.B);
+                GL.Vertex3(p);
+            }
 
             GL.End();
             return points;

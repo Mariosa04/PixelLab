@@ -105,7 +105,7 @@ namespace PixelLab.Forms
             controlPanel.Controls.Add(lable1);
             lblImageInfo = new Label{Top = 350,Left = 10,Width = 220,Height = 120,BorderStyle = BorderStyle.FixedSingle,AutoSize = false};
             controlPanel.Controls.Add(lblImageInfo);
-
+            
 
             //
             btnOpenImage = new Button { Top = 510, Left = 10, Width = 200, Height = 35, Text = "Open Image" };
@@ -352,25 +352,8 @@ namespace PixelLab.Forms
             }
         }
         ///
-        ///
-        private void BtnReset_Click(
-            object sender,
-            EventArgs e)
-        {
-            if (originalImage == null)
-                return;
+ 
 
-            // Reset sliders
-            tbC1.Value = 0;
-            tbC2.Value = 0;
-            tbC3.Value = 0;
-            tbC4.Value = 0;
-
-            // Enable channels
-            chkC1.Checked = true;
-            chkC2.Checked = true;
-            chkC3.Checked = true;
-            chkC4.Checked = true;
 
             // Reset quantization
             if (cmbQuantization != null)

@@ -1,14 +1,17 @@
 ﻿using Emgu.CV;
 using Emgu.CV.CvEnum;
 using Emgu.CV.Structure; 
+using PixelLab.Models;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using PixelLab.Models;
-
+using OpenTK;
+using OpenTK.Graphics.OpenGL;
+using GdiPixelFormat = System.Drawing.Imaging.PixelFormat;
 namespace PixelLab.Core
 {
     public static class ColorSpaceConverter
@@ -259,7 +262,6 @@ namespace PixelLab.Core
             return value;
         }
 
-
         public static void RgbToYuv(int r, int g, int b, out float y, out float u, out float v)
         {
             y = 0.299f * r + 0.587f * g + 0.114f * b;
@@ -267,13 +269,20 @@ namespace PixelLab.Core
             v = 0.615f * r - 0.51499f * g - 0.10001f * b;
         }
 
-        public static void YuvToRgb(float y, float u, float v, out int r, out int g, out int b)
+        //public static void YuvToRgb(float y, float u, float v, out int r, out int g, out int b)
+        //{
+        //    r = (int)(y + 1.13983f * v);
+        //    g = (int)(y - 0.39465f * u - 0.58060f * v);
+        //    b = (int)(y + 2.03211f * u);
+        //}
+
+        public static void ApplyHSV(byte r, byte g, byte b, ColorValues v)
         {
             r = (int)(y + 1.13983f * v);
             g = (int)(y - 0.39465f * u - 0.58060f * v);
             b = (int)(y + 2.03211f * u);
         }
-        //////////////////////////////////////////////////
+
         public static float F(float t)
         {
             return (t > 0.008856f)
@@ -286,65 +295,57 @@ namespace PixelLab.Core
             v.H = c.GetHue();
             v.S = c.GetSaturation() * 100;
             v.V = c.GetBrightness() * 100;
-
         }
-
-        public static void ApplyCMYK(Color c, ColorValues v)
+        public static void ApplyCMYK(byte r, byte g, byte b, ColorValues v)
         {
-            float r = c.R / 255f;
-            float g = c.G / 255f;
-            float b = c.B / 255f;
+            float rf = r / 255f;
+            float gf = g / 255f;
+            float bf = b / 255f;
 
-            v.K = 1 - Math.Max(r, Math.Max(g, b));
-            v.C_val = Math.Max(0, 1 - r - v.K);
-            v.M = Math.Max(0, 1 - g - v.K);
-            v.Y_val = Math.Max(0, 1 - b - v.K);
+            float k = 1 - Math.Max(rf, Math.Max(gf, bf));
+
+            v.K = k;
+            v.C_val = (1 - rf - k);
+            v.M = (1 - gf - k);
+            v.Y_val = (1 - bf - k);
         }
 
-        public static void ApplyYUV(Color c, ColorValues v)
+        public static void ApplyYUV(byte r, byte g, byte b, ColorValues v)
         {
-            v.Y_yuv = 0.299f * c.R + 0.587f * c.G + 0.114f * c.B;
-            v.U = -0.147f * c.R - 0.289f * c.G + 0.436f * c.B;
-            v.Vu = 0.615f * c.R - 0.515f * c.G - 0.100f * c.B;
+            v.Y_yuv = 0.299f * r + 0.587f * g + 0.114f * b;
+            v.U = -0.14713f * r - 0.28886f * g + 0.436f * b;
+            v.Vu = 0.615f * r - 0.51499f * g - 0.10001f * b;
         }
 
-        public static void ApplyLab(Color c, ColorValues v)
+
+        public static void ApplyLab(byte r, byte g, byte b, ColorValues v)
         {
-            float r = c.R / 255f;
-            float g = c.G / 255f;
-            float b = c.B / 255f;
+            float rf = r / 255f;
+            float gf = g / 255f;
+            float bf = b / 255f;
+            
+            float l = (0.2126f * rf + 0.7152f * gf + 0.0722f * bf) * 100f;
 
-            r = (r > 0.04045f) ? (float)Math.Pow((r + 0.055f) / 1.055f, 2.4) : r / 12.92f;
-            g = (g > 0.04045f) ? (float)Math.Pow((g + 0.055f) / 1.055f, 2.4) : g / 12.92f;
-            b = (b > 0.04045f) ? (float)Math.Pow((b + 0.055f) / 1.055f, 2.4) : b / 12.92f;
+            float a = (rf - gf) * 128f;
+            float b2 = (gf - bf) * 128f;
 
-            float X = r * 0.4124f + g * 0.3576f + b * 0.1805f;
-            float Y = r * 0.2126f + g * 0.7152f + b * 0.0722f;
-            float Z = r * 0.0193f + g * 0.1192f + b * 0.9505f;
-
-            float Xn = 0.95047f;
-            float Yn = 1.00000f;
-            float Zn = 1.08883f;
-
-            float fx = F(X / Xn);
-            float fy = F(Y / Yn);
-            float fz = F(Z / Zn);
-
-            v.L_lab = 116f * fy - 16f;
-            v.A_lab = 500f * (fx - fy);
-            v.B_lab = 200f * (fy - fz);
+            v.L_lab = l;
+            v.A_lab = a;
+            v.B_lab = b2;
         }
 
-        public static void ApplyYCbCr(Color c, ColorValues v)
+
+        public static void ApplyYCbCr(byte r, byte g, byte b, ColorValues v)
         {
-            float r = c.R;
-            float g = c.G;
-            float b = c.B;
+            float y = 0.299f * r + 0.587f * g + 0.114f * b;
+            float cb = -0.168736f * r - 0.331264f * g + 0.5f * b + 128;
+            float cr = 0.5f * r - 0.418688f * g - 0.081312f * b + 128;
 
-            v.Y_ycbcr = 0.299f * r + 0.587f * g + 0.114f * b;
-            v.Cb = b - v.Y_ycbcr;
-            v.Cr = r - v.Y_ycbcr;
+            v.Y_ycbcr = y;
+            v.Cb = cb;
+            v.Cr = cr;
         }
+     
 
     }
 }
