@@ -231,7 +231,7 @@ namespace PixelLab.Forms
                 tbC2.Minimum = -255; tbC2.Maximum = 255;
                 tbC3.Minimum = -255; tbC3.Maximum = 255;
             }
-               tbC1.Value = 0; tbC2.Value = 0; tbC3.Value = 0; tbC4.Value = 0;
+            tbC1.Value = 0; tbC2.Value = 0; tbC3.Value = 0; tbC4.Value = 0;
 
 
 
@@ -246,7 +246,7 @@ namespace PixelLab.Forms
 
             workspacePictureBox.Image?.Dispose();
 
-            workspacePictureBox.Image =(Bitmap)currentImage.Clone();
+            workspacePictureBox.Image = (Bitmap)currentImage.Clone();
         }
 
 
@@ -289,6 +289,12 @@ namespace PixelLab.Forms
             }
             result.Dispose();
         }
+
+        private void MainForm_Load(object sender, EventArgs e)
+        {
+
+        }
+
         ///////////////////////////////////////
         private void MainForm_DragEnter(object sender, DragEventArgs e)
         {
@@ -371,16 +377,16 @@ namespace PixelLab.Forms
                 cmbQuantization.SelectedIndex = 0;
 
             // Remove modified image
-            if (workspacePictureBox.Image != null &&workspacePictureBox.Image != originalImage)
+            if (workspacePictureBox.Image != null && workspacePictureBox.Image != originalImage)
             {
                 workspacePictureBox.Image.Dispose();
             }
 
             // Restore original image
-            workspacePictureBox.Image =(Bitmap)originalImage.Clone();
+            workspacePictureBox.Image = (Bitmap)originalImage.Clone();
 
             // Update 3D color space
-            if (color3DForm != null &&!color3DForm.IsDisposed)
+            if (color3DForm != null && !color3DForm.IsDisposed)
             {
                 color3DForm.UpdateImage(
                     (Bitmap)originalImage,
@@ -478,7 +484,7 @@ namespace PixelLab.Forms
 
             if (color3DForm == null || color3DForm.IsDisposed)
             {
-                color3DForm = new ColorSpace3DForm((Bitmap) workspacePictureBox.Image, cmbColorSpace.SelectedItem.ToString());
+                color3DForm = new ColorSpace3DForm((Bitmap)workspacePictureBox.Image, cmbColorSpace.SelectedItem.ToString());
 
 
 
