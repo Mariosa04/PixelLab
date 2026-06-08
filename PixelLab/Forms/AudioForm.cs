@@ -80,6 +80,19 @@ namespace PixelLab.Forms
             };
             controlPanel.Controls.Add(lblPlaybackTitle);
 
+            Button btnLoadAudio = new Button
+            {
+                Top = 890,
+                Left = 10,
+                Width = 270,
+                Height = 30,
+                Text = "📂 تحميل ملف صوتي"
+            };
+
+            btnLoadAudio.Click += BtnLoadAudio_Click;
+            controlPanel.Controls.Add(btnLoadAudio);
+
+
             btnPlay = new Button
             {
                 Top = 40,
@@ -101,6 +114,8 @@ namespace PixelLab.Forms
             };
             btnPause.Click += btnPause_Click;
             controlPanel.Controls.Add(btnPause);
+
+
 
             trackAudioPosition = new TrackBar
             {
@@ -876,6 +891,35 @@ namespace PixelLab.Forms
                 MessageBox.Show("Playback Error: " + ex.Message);
             }
         }
+
+        private void BtnLoadAudio_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog openDialog = new OpenFileDialog
+            {
+                Filter = "Audio Files|*.wav;*.mp3;*.aif;*.aiff",
+                Title = "اختر ملف صوتي"
+            };
+
+            if (openDialog.ShowDialog() != DialogResult.OK)
+                return;
+
+            try
+            {
+                CleanUpAudio();
+
+                currentAudioPath = openDialog.FileName;
+
+                UpdateAudioInfo(currentAudioPath);
+                DrawWaveform(currentAudioPath);
+
+                lblStatus.Text = "تم تحميل الملف بنجاح";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error loading audio file: " + ex.Message);
+            }
+        }
+
 
         private void btnPause_Click(object sender, EventArgs e)
         {
